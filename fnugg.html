@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fnugg Blogg</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+      height: 100vh; /* Full høyde */
+      display: flex;
+      flex-direction: column;
+      overflow: hidden; /* Unngå rulling */
+    }
+
+    header {
+      background: #333;
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+      font-size: 2rem;
+      flex-shrink: 0; /* Unngå at header krymper */
+    }
+
+    #blog-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      padding: 20px;
+      overflow: hidden;
+      flex: 1; /* Fyll tilgjengelig plass */
+      max-height: calc(100vw * 9 / 16 - 80px); /* Tilpass til 16:9-forhold */
+    }
+
+    @media (max-width: 1200px) {
+      #blog-container {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 800px) {
+      #blog-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .blog-post {
+      background-color: #fff;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      max-height: 100%;
+    }
+
+    .blog-post img {
+      width: 100%;
+      height: 500px; /* Sett fast høyde for å oppnå kvadratisk form */
+      object-fit: cover; /* Crop bildet til kvadrat */
+      border-radius: 10px;
+      margin-bottom: 15px;
+      flex-shrink: 0;
+    }
+
+    .blog-post h2 {
+      font-size: 1.5rem;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .blog-post .date {
+      font-size: 1rem;
+      color: #777;
+      margin-bottom: 15px;
+    }
+
+    .blog-post p {
+      font-size: 1rem;
+      color: #555;
+      flex: 1; /* Ta opp tilgjengelig plass */
+      overflow: hidden; /* Skjul overskytende tekst */
+    }
+
+  </style>
+</head>
+<body>
+  <header>
+    Siste Oppdateringer fra Hafjell
+  </header>
+  <div id="blog-container">
+    <!-- Blog posts will be inserted here -->
+  </div>
+
+  <script>
+    // Fetch data from the API
+    fetch('https://api.fnugg.no/search?index=blog&facet=site:12&sort=date:desc')
+      .then(response => response.json())
+      .then(data => {
+        displayData(data);
+      })
+      .catch(error => console.error('Error fetching data:', error));
+
+    // Function to display data
+    function displayData(data) {
+      const container = document.getElementById('blog-container');
+      const results = data.hits.hits.slice(0, 3); // Henter de tre siste innleggene
+
+      results.forEach(blog => {
+        const blogPost = document.createElement('div');
+        blogPost.classList.add('blog-post');
+
+        const imageUrl = blog._source.images ? blog._source.images.image_full : null;
+        const date = new Date(blog._source.date).toLocaleDateString('no-NO', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+
+        blogPost.innerHTML = `
+          ${imageUrl ? `<img src="${imageUrl}" alt="${blog._source.title}">` : ''}
+          <h2>${blog._source.title}</h2>
+          <div class="date">${date}</div>
+          <p>${blog._source.description}</p>
+        `;
+
+        container.appendChild(blogPost);
+      });
+    }
+  </script>
+</body>
+</html>
